@@ -5,8 +5,18 @@
 #include <QTcpServer>
 #include <QNetworkAccessManager>
 #include <QJsonObject>
+#include <QList>
+#include <QString>
+#include <QSqlDatabase>
 #include "Task.h"
+struct AuthAgent {
+    QString username;
+    QString hostname;
 
+    bool operator==(const AuthAgent& other) const {
+        return username == other.username && hostname == other.hostname;
+    }
+};
 class QTcpSocket;
 class QNetworkReply;
 
@@ -16,6 +26,7 @@ class Server : public QObject
 
 public:
     explicit Server(QObject *parent = nullptr);
+    ~Server() override;
 
 private slots:
     void onNewConnection();
@@ -28,6 +39,13 @@ private:
     QTcpServer* server;
     QNetworkAccessManager* manager;
     int serverPort;
+    QList<AuthAgent> allowedAgents;
+    QSqlDatabase db;
+    QString dbHost;
+    int dbPort;
+    QString dbUsername;
+    QString dbPassword;
+    QString dbName;
 };
 
 #endif // SERVER_H

@@ -1,6 +1,22 @@
 {
-  server {
-    port 1234,
-    log_level debug
-  }
+  "server": {
+    "port": 1234
+  },
+  "allowedAgents": [
+    {
+      "username": "user",
+      "hostname": "host"
+    },
+									 {
+                                         "username": "drkur",
+                                         "hostname": "My_Big_Comp"
+                                     }
+  ],
+  "database": {
+        "host": "192.168.3.7",
+        "port": 1433,
+        "username": "your_username",
+        "password": "your_password",
+        "database": "your_database"
+    }
 }

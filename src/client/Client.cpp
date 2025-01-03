@@ -21,6 +21,7 @@ Client::Client(QObject *parent) : QObject(parent), socket(new QTcpSocket(this)),
 
     sendSystemInfo();
     connectToServer();
+
 }
 
 void Client::sendSystemInfo() {
@@ -62,7 +63,7 @@ void Client::sendMessage(const QString &message) {
 
 void Client::onConnected() {
     qDebug() << "Connected to server.";
-    sendMessage("Hello from client");
+    // sendMessage("Hello from client");
 }
 
 void Client::onReadyRead() {
@@ -72,6 +73,7 @@ void Client::onReadyRead() {
 
 void Client::onDisconnected() {
     qDebug() << "Disconnected from server.";
+    QCoreApplication::exit(0);
 }
 
 void Client::onReply(QNetworkReply *reply)
@@ -84,6 +86,7 @@ void Client::onReply(QNetworkReply *reply)
     else
     {
         qDebug() << "Error from server: " << reply->errorString();
+        socket->disconnectFromHost();
     }
     reply->deleteLater();
 }

@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.14)
 project(QtClientServerWithQML)
 
 # Указываем, что проект использует Qt6
-find_package(Qt6 REQUIRED COMPONENTS Core Quick Network)
-
+find_package(Qt6 REQUIRED COMPONENTS Core Quick Network Sql)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/common)
 # Указываем файлы исходного кода для клиента и сервера
 set(CLIENT_SOURCES
     src/client/main.cpp
@@ -32,7 +32,7 @@ qt_wrap_cpp(SERVER_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/server/Server.h)
 qt_wrap_cpp(TRIGGER_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/common/Trigger.h)
 qt_wrap_cpp(OPERATION_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/common/Operation.h)
 qt_wrap_cpp(TASK_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/common/Task.h)
-qt_wrap_cpp(TRIGGERWATCHDOG_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/common/TriggerWatchDog.h)
+    qt_wrap_cpp(TRIGGERWATCHDOG_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/common/TriggerWatchDog.h)
 qt_wrap_cpp(CLIENT_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/client/Client.h)
 qt_wrap_cpp(AGENT_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/agent/Agent.h)
 
@@ -47,8 +47,8 @@ add_executable(Client ${CLIENT_SOURCES}
     ${OPERATION_HEADERS_MOC}
     src/common/Task.h
     ${TASK_HEADERS_MOC}
-     src/common/TriggerWatchDog.h
-    ${TRIGGERWATCHDOG_HEADERS_MOC}
+      src/common/TriggerWatchDog.h
+       ${TRIGGERWATCHDOG_HEADERS_MOC}
     ${COMMON_SOURCES}
 )
 add_executable(Server ${SERVER_SOURCES}
@@ -60,13 +60,11 @@ add_executable(Server ${SERVER_SOURCES}
     ${OPERATION_HEADERS_MOC}
     src/common/Task.h
     ${TASK_HEADERS_MOC}
-     src/common/TriggerWatchDog.h
-      ${TRIGGERWATCHDOG_HEADERS_MOC}
+    src/common/TriggerWatchDog.h
+     ${TRIGGERWATCHDOG_HEADERS_MOC}
     ${COMMON_SOURCES})
 
-target_include_directories(Server PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/common
-    )
+
 
 add_executable(Agent ${AGENT_SOURCES}
      src/agent/Agent.h
@@ -78,14 +76,14 @@ add_executable(Agent ${AGENT_SOURCES}
     ${OPERATION_HEADERS_MOC}
      src/common/Task.h
       ${TASK_HEADERS_MOC}
-      src/common/TriggerWatchDog.h
-      ${TRIGGERWATCHDOG_HEADERS_MOC}
+     src/common/TriggerWatchDog.h
+       ${TRIGGERWATCHDOG_HEADERS_MOC}
     ${COMMON_SOURCES}
 )
 
 # Указываем, что проект использует Qt6
-target_link_libraries(Client Qt6::Core Qt6::Quick Qt6::Network)
-target_link_libraries(Server Qt6::Core Qt6::Network)
+target_link_libraries(Client Qt6::Core Qt6::Quick Qt6::Network Qt6::Sql)
+target_link_libraries(Server Qt6::Core Qt6::Network Qt6::Sql)
 target_link_libraries(Agent Qt6::Core Qt6::Network)
 
 set_target_properties(Agent PROPERTIES WIN32_EXECUTABLE TRUE)

@@ -1,35 +1,29 @@
 #include <QCoreApplication>
-#include "Agent.h"
 #include <QCommandLineParser>
+#include "Agent.h"
 #include <QDebug>
+
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("Qt Agent for server monitoring");
+    parser.setApplicationDescription("Qt Agent");
     parser.addHelpOption();
 
-    QCommandLineOption serverUrlOption(QStringList() << "s" << "server", "Server url", "url");
+    QCommandLineOption serverUrlOption(QStringList() << "s" << "serverUrl", "Server URL", "serverUrl");
+    QCommandLineOption intervalOption(QStringList() << "i" << "interval", "Interval", "interval");
     parser.addOption(serverUrlOption);
-
-    QCommandLineOption intervalOption(QStringList() << "i" << "interval", "Interval in milliseconds", "ms");
     parser.addOption(intervalOption);
+
     parser.process(app);
-    QString serverUrl = "http://localhost:1234/system";
-    if(parser.isSet(serverUrlOption)){
-        serverUrl =  parser.value(serverUrlOption);
-    }
-    int interval = 5000;
-    if(parser.isSet(intervalOption)){
-        interval = parser.value(intervalOption).toInt();
-    }
 
-
-    qDebug() << "Starting Agent with server " << serverUrl << " and interval " << interval;
+    QString serverUrl = parser.value(serverUrlOption);
+    int interval = parser.value(intervalOption).toInt();
 
     Agent agent;
-    agent.serverUrl = serverUrl;
-    agent.timer->setInterval(interval);
+
+
+    qDebug() << "Agent started with server url:" << serverUrl << " and interval: " << interval;
     return app.exec();
 }

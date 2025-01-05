@@ -7,14 +7,20 @@
 class Trigger : public QObject
 {
     Q_OBJECT
-
 public:
     explicit Trigger(QObject *parent = nullptr);
-    virtual bool isTriggered(const QJsonObject& agentData) = 0;
     virtual ~Trigger() = default;
+    virtual void start();
+    virtual void stop();
+    virtual bool isTriggered(const QJsonObject &agentData) {
+        Q_UNUSED(agentData);
+        return false;
+    };
+
 
 signals:
-    void triggered(const QJsonObject& agentData);
+    void triggered(const QJsonObject &result);
+
 };
 
 #endif // TRIGGER_H

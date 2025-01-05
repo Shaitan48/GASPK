@@ -2,10 +2,12 @@
 #define AGENT_H
 
 #include <QObject>
-#include <QTimer>
+#include <QTcpSocket>
 #include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QDir>
+#include <QList>
+#include "Trigger.h"
+class QTcpSocket;
+class QNetworkReply;
 
 class Agent : public QObject
 {
@@ -13,15 +15,26 @@ class Agent : public QObject
 
 public:
     explicit Agent(QObject *parent = nullptr);
+    ~Agent() override;
 
 private slots:
-    void sendSystemInfo();
-    void onReply(QNetworkReply *reply);
+    void onConnected();
+    void onReadyRead();
+    void onDisconnected();
+    void onReply(QNetworkReply* reply);
+    void onTriggered(const QJsonObject &result);
 
-public:
-    QTimer *timer;
-    QNetworkAccessManager *manager;
-    QString serverUrl;
+private:
+    void sendMessage(const QString &message);
+    void connectToServer();
+    void sendSystemInfo();
+    void loadTriggers();
+    void loadOperations();
+    void sendOperationResult(const QJsonObject& operationResult);
+    void performOperation(const QJsonObject &operation);
+    QTcpSocket* socket;
+    QNetworkAccessManager* manager;
+    QList<Trigger*> triggers;
 };
 
 #endif // AGENT_H

@@ -2,24 +2,27 @@
 #define TRIGGERWATCHDOG_H
 
 #include "Trigger.h"
-#include <QList>
-#include <QRegularExpression>
- #include <QJsonObject>
+#include <QString>
+#include <QObject>
+#include <QTimer>
 
 class TriggerWatchDog : public Trigger
 {
     Q_OBJECT
-
 public:
-    TriggerWatchDog(QObject *parent = nullptr);
+    TriggerWatchDog(const QString &path, const QString &mask, int interval, QObject *parent = nullptr);
     ~TriggerWatchDog() override;
-    void addDirectory(const QString &path);
-    void addRegex(const QString &regex);
-    bool isTriggered(const QJsonObject &agentData) override;
+    void start() override;
+    void stop() override;
 
 private:
-    QList<QString> directories;
-    QList<QRegularExpression> regexes;
+    void checkDir();
+    QString path;
+    QString mask;
+    int interval;
+    QTimer *timer;
+public:
+    bool isTriggered(const QJsonObject &agentData) override;
 };
 
 #endif // TRIGGERWATCHDOG_H

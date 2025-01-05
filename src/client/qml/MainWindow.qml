@@ -1,26 +1,29 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-
-ApplicationWindow {
+import QtQuick
+import QtQuick.Window
+import QtQuick.Controls
+import  "./HostStatusView.qml"
+import  "./InfoView.qml"
+Window {
+    id: mainWindow
+    width: 800
+    height: 600
     visible: true
-    width: 640
-    height: 480
-    title: "Qt Client"
-
-    Column {
-        anchors.centerIn: parent
-
-        Button {
-            text: "Connect to Server"
-            onClicked: {
-                client.connectToServer();
+    title: qsTr("Client")
+    Rectangle {
+        id: root
+        anchors.fill: parent
+        color: "white"
+         Row {
+            anchors.centerIn: parent
+            spacing: 20
+          HostStatusView {
+              id: hostStatusView
             }
-        }
-
-        Button {
-            text: "Send Message"
-            onClicked: {
-                client.sendMessage("Hello, Server!");
+           InfoView {
+              id: infoView
+              onActionPerformed: (id) => {
+                     client.operationResult = id
+               }
             }
         }
     }

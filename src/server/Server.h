@@ -8,7 +8,7 @@
 #include <QList>
 #include <QString>
 #include <QSqlDatabase>
-#include "Task.h"
+#include "Trigger.h"
 struct AuthAgent {
     QString username;
     QString hostname;
@@ -19,7 +19,6 @@ struct AuthAgent {
 };
 class QTcpSocket;
 class QNetworkReply;
-
 class Server : public QObject
 {
     Q_OBJECT
@@ -46,6 +45,7 @@ private:
     QString dbUsername;
     QString dbPassword;
     QString dbName;
+    QJsonObject config;
 };
 
 #endif // SERVER_H

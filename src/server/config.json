@@ -7,16 +7,77 @@
       "username": "user",
       "hostname": "host"
     },
-									 {
-                                         "username": "drkur",
-                                         "hostname": "My_Big_Comp"
-                                     }
+    {
+      "username": "drkur",
+      "hostname": "My_Big_Comp"
+    },
+    {
+      "username": "mikhail",
+      "hostname": "DESKTOP-LS59B6I"
+    }
   ],
   "database": {
-        "host": "192.168.3.7",
-        "port": 1433,
-        "username": "your_username",
-        "password": "your_password",
-        "database": "your_database"
-    }
+    "host": "192.168.3.7",
+    "port": 1433,
+    "username": "your_username",
+    "password": "your_password",
+    "database": "your_database"
+  },
+  "triggers": {
+    "ping": [
+      {
+        "target": "192.168.3.7",
+        "interval": 5000
+      },
+      {
+        "target": "192.168.3.35",
+        "interval": 5000
+      },
+      {
+        "target": "192.168.3.8",
+        "interval": 5000
+      }
+    ],
+    "diskSpace": [
+      {
+        "disks": ["C:/", "Z:/"],
+        "threshold": 2048,
+        "interval": 10000
+      }
+    ]
+  },
+   "operations": [
+        {
+             "name": "fileDelete",
+            "parameters": {
+            "path": "C:/test.txt"
+        }
+        },
+       {
+            "name": "fileCopy",
+            "parameters": {
+            "source": "C:/test.txt",
+             "destination": "D:/test.txt"
+           }
+        },
+        {
+            "name": "fileMove",
+           "parameters": {
+            "source": "C:/test.txt",
+             "destination": "D:/test.txt"
+           }
+        },
+       {
+            "name": "message",
+            "parameters": {
+            "text": "Hello from server"
+         }
+       },
+      {
+        "name": "request",
+         "parameters": {
+            "text": "Do you want to continue?"
+           }
+      }
+    ]
 }

@@ -7,11 +7,12 @@
 class Operation : public QObject
 {
     Q_OBJECT
-
 public:
     explicit Operation(QObject *parent = nullptr);
-    virtual void execute(const QJsonObject& agentData) = 0;
     virtual ~Operation() = default;
+    virtual QJsonObject execute(const QJsonObject& params) = 0;
+    virtual QString getName() = 0;
+    virtual QString getId() = 0;
 };
 
 #endif // OPERATION_H

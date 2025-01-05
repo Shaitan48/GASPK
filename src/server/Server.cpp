@@ -15,6 +15,9 @@
 #include <QJsonArray>
 #include <QSqlError>
 #include <QSqlQuery>
+#include "PingTrigger.h"
+#include "DiskSpaceTrigger.h"
+#include "TriggerWatchDog.h"
 
 Server::Server(QObject *parent) : QObject(parent), manager(new QNetworkAccessManager(this)), server(new QTcpServer(this)) {
     loadConfig();
@@ -42,10 +45,12 @@ Server::Server(QObject *parent) : QObject(parent), manager(new QNetworkAccessMan
             qDebug() << getFormattedDateTime() << "Database version:" << query.value(0).toString();
         }
     }
+
 }
 Server::~Server(){
     db.close();
     qDebug() << getFormattedDateTime() << "Database closed" ;
+
 }
 QString Server::getFormattedDateTime() {
     QDateTime now = QDateTime::currentDateTime();
@@ -84,7 +89,7 @@ void Server::loadConfig() {
         serverPort = 1234;
         return;
     }
-    QJsonObject config = jsonDoc.object();
+    config = jsonDoc.object();
 
     if(config.contains("server") && config["server"].isObject()){
         QJsonObject serverConfig = config["server"].toObject();
@@ -133,6 +138,32 @@ void Server::loadConfig() {
     }else{
         qDebug() << getFormattedDateTime() << "Error: config.json does not have database object";
     }
+    if(config.contains("triggers") && config["triggers"].isObject()){
+        QJsonObject triggersConfig = config["triggers"].toObject();
+        if(triggersConfig.contains("ping") && triggersConfig["ping"].isArray()){
+            QJsonArray pingArray = triggersConfig["ping"].toArray();
+            qDebug() << getFormattedDateTime() << "Loaded " << pingArray.size() << " ping triggers from config";
+        }
+
+        if(triggersConfig.contains("diskSpace") && triggersConfig["diskSpace"].isArray()){
+            QJsonArray diskSpaceArray = triggersConfig["diskSpace"].toArray();
+            qDebug() << getFormattedDateTime() << "Loaded " << diskSpaceArray.size() << " diskSpace triggers from config";
+        }
+        if(triggersConfig.contains("watchDog") && triggersConfig["watchDog"].isArray()){
+            QJsonArray watchDogArray = triggersConfig["watchDog"].toArray();
+            qDebug() << getFormattedDateTime() << "Loaded " << watchDogArray.size() << " watchDog triggers from config";
+        }
+
+    }else{
+        qDebug() << getFormattedDateTime() << "Error: config.json does not have triggers object";
+    }
+    if(config.contains("operations") && config["operations"].isArray()){
+        QJsonArray operationsArray = config["operations"].toArray();
+        qDebug() << getFormattedDateTime() << "Loaded " << operationsArray.size() << " operations from config";
+    }
+    else{
+        qDebug() << getFormattedDateTime() << "Error: config.json does not have operations object";
+    }
 }
 void Server::onReply(QNetworkReply *reply)
 {
@@ -159,13 +190,11 @@ void Server::onNewConnection() {
         handleClient(socket);
     });
 }
-
 void Server::handleClient(QTcpSocket *socket) {
     if (socket->bytesAvailable() == 0)
         return;
 
     QByteArray data = socket->readAll();
-    // QString request(data);
     qDebug() << getFormattedDateTime() << "Received request:\n" << data;
 
     int headerEnd = data.indexOf("\r\n\r\n");
@@ -204,6 +233,54 @@ void Server::handleClient(QTcpSocket *socket) {
         responseData = jsonDoc.toJson();
         contentType = "application/json";
 
+    }
+    else if (method == "GET" && path == "/triggers")
+    {
+        QJsonObject triggers;
+        QJsonArray pingTriggers;
+        QJsonArray diskSpaceTriggers;
+        QJsonArray watchDogTriggers;
+
+        if(config.contains("triggers") && config["triggers"].isObject()){
+            QJsonObject triggersConfig = config["triggers"].toObject();
+            if(triggersConfig.contains("ping") && triggersConfig["ping"].isArray()){
+                QJsonArray pingArray = triggersConfig["ping"].toArray();
+                for(const auto& value: pingArray){
+                    pingTriggers.append(value);
+                }
+            }
+            if(triggersConfig.contains("diskSpace") && triggersConfig["diskSpace"].isArray()){
+                QJsonArray diskSpaceArray = triggersConfig["diskSpace"].toArray();
+                for(const auto& value: diskSpaceArray){
+                    diskSpaceTriggers.append(value);
+                }
+            }
+            if(triggersConfig.contains("watchDog") && triggersConfig["watchDog"].isArray()){
+                QJsonArray watchDogArray = triggersConfig["watchDog"].toArray();
+                for(const auto& value: watchDogArray){
+                    watchDogTriggers.append(value);
+                }
+            }
+        }
+
+        triggers["ping"] = pingTriggers;
+        triggers["diskSpace"] = diskSpaceTriggers;
+        triggers["watchDog"] = watchDogTriggers;
+
+
+        QJsonDocument jsonDoc(triggers);
+        responseData = jsonDoc.toJson();
+        contentType = "application/json";
+    }
+    else if (method == "GET" && path == "/operations")
+    {
+        QJsonArray operationsArray;
+        if(config.contains("operations") && config["operations"].isArray()){
+            operationsArray = config["operations"].toArray();
+        }
+        QJsonDocument jsonDoc(operationsArray);
+        responseData = jsonDoc.toJson();
+        contentType = "application/json";
     }
     else if (method == "POST" && path == "/system")
     {
@@ -254,7 +331,34 @@ void Server::handleClient(QTcpSocket *socket) {
         QJsonDocument jsonDoc(json);
         responseData = jsonDoc.toJson();
         contentType = "application/json";
-    }else {
+    }else if (method == "POST" && path == "/operationResult")
+    {
+        qDebug() << getFormattedDateTime() << "Received operation result:\n" <<  bodyData;
+
+        QJsonParseError jsonError;
+        QJsonDocument jsonDoc = QJsonDocument::fromJson(bodyData, &jsonError);
+        if (jsonError.error != QJsonParseError::NoError) {
+            qDebug() << getFormattedDateTime() << "Error: Could not parse operation result: " << jsonError.errorString();
+            socket->disconnectFromHost();
+            return;
+        }
+        if (!jsonDoc.isObject()) {
+            qDebug() << getFormattedDateTime() << "Error: operation result is not a JSON object";
+            socket->disconnectFromHost();
+            return;
+        }
+
+        QJsonObject operationResult = jsonDoc.object();
+
+        qDebug() << getFormattedDateTime() << "Operation result" << operationResult;
+
+        QJsonObject json;
+        json["message"] = "Operation result received by server (Qt)";
+        QJsonDocument jsonDocResponse(json);
+        responseData = jsonDocResponse.toJson();
+        contentType = "application/json";
+    }
+    else {
         qDebug() << getFormattedDateTime() << "Error: Invalid request";
         socket->write("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nNot Found");
         socket->disconnectFromHost();

@@ -1,55 +1,55 @@
 #include "TriggerWatchDog.h"
+#include <QDirIterator>
 #include <QDebug>
-#include <QJsonArray>
-
-TriggerWatchDog::TriggerWatchDog(QObject *parent) : Trigger(parent)
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QFile>
+#include <QFileInfo>
+#include <QDateTime>
+TriggerWatchDog::TriggerWatchDog(const QString &path, const QString &mask,  int interval, QObject *parent)
+    : Trigger(parent), path(path), mask(mask), interval(interval), timer(new QTimer(this))
 {
+    connect(timer, &QTimer::timeout, this, &TriggerWatchDog::checkDir);
+}
+TriggerWatchDog::~TriggerWatchDog(){
+    stop();
+}
+void TriggerWatchDog::start()
+{
+    if (timer && !timer->isActive()) {
+        timer->start(interval);
+        checkDir();
+    }
+}
+void TriggerWatchDog::stop()
+{
+    if (timer && timer->isActive()) {
+        timer->stop();
+    }
 }
 
-TriggerWatchDog::~TriggerWatchDog()
+void TriggerWatchDog::checkDir()
 {
-    qDebug() << "TriggerWatchDog destroyed";
-}
-
-void TriggerWatchDog::addDirectory(const QString &path)
-{
-    directories.append(path);
-}
-
-void TriggerWatchDog::addRegex(const QString &regex)
-{
-    regexes.append(QRegularExpression(regex));
-}
-
-bool TriggerWatchDog::isTriggered(const QJsonObject &agentData)
-{
-    if (!agentData.contains("files") || !agentData["files"].isArray())
-    {
-        return false;
+    QDirIterator it(path, QDirIterator::Subdirectories);
+    QJsonObject data;
+    bool found = false;
+    while (it.hasNext()) {
+        QString filePath = it.next();
+        QFileInfo fileInfo(filePath);
+        if(fileInfo.isFile()){
+            if(fileInfo.fileName().contains(mask, Qt::CaseInsensitive)){
+                qDebug() << "File detected: " << filePath;
+                data["filePath"] = filePath;
+                data["datetime"] =  QDateTime::currentDateTime().toString();
+                found = true;
+                break;
+            }
+        }
     }
 
-    QJsonArray fileList = agentData["files"].toArray();
-     for (const auto& value : fileList) {
-        if(!value.isObject())
-             continue;
-
-         QJsonObject fileInfo = value.toObject();
-       if(!fileInfo.contains("path") || !fileInfo.contains("created"))
-           continue;
-       QString path = fileInfo["path"].toString();
-       for(const QString& dir : directories){
-            if(path.startsWith(dir)){
-              for(const QRegularExpression& regex: regexes)
-               {
-                   if(regex.match(path).hasMatch()){
-                       qDebug() << "TriggerWatchDog: file match in " << dir << " with regex " << regex.pattern();
-                      emit triggered(agentData);
-                     return true;
-                   }
-               }
-           }
-
-       }
-    }
-    return false;
+    emit triggered(data);
+}
+bool TriggerWatchDog::isTriggered(const QJsonObject &agentData){
+    Q_UNUSED(agentData);
+    return true;
 }

@@ -3,16 +3,20 @@
 
 #include <QObject>
 #include <QJsonObject>
-
+#include <QString>
 class Operation : public QObject
 {
     Q_OBJECT
 public:
-    explicit Operation(QObject *parent = nullptr);
+    explicit Operation(qlonglong id, QObject *parent = nullptr);
     virtual ~Operation() = default;
-    virtual QJsonObject execute(const QJsonObject& params) = 0;
-    virtual QString getName() = 0;
-    virtual QString getId() = 0;
+
+    qlonglong id() const;
+    virtual QString name() const = 0;
+    virtual void execute() = 0;
+
+private:
+    qlonglong m_id;
 };
 
 #endif // OPERATION_H

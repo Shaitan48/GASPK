@@ -23,61 +23,73 @@
     "password": "your_password",
     "database": "your_database"
   },
-  "triggers": {
-    "ping": [
-      {
-        "target": "192.168.3.7",
-        "interval": 5000
-      },
-      {
-        "target": "192.168.3.35",
-        "interval": 5000
-      },
-      {
-        "target": "192.168.3.8",
-        "interval": 5000
-      }
-    ],
-    "diskSpace": [
-      {
-        "disks": ["C:/", "Z:/"],
-        "threshold": 2048,
-        "interval": 10000
-      }
-    ]
-  },
-   "operations": [
-        {
-             "name": "fileDelete",
-            "parameters": {
-            "path": "C:/test.txt"
-        }
-        },
-       {
-            "name": "fileCopy",
-            "parameters": {
-            "source": "C:/test.txt",
-             "destination": "D:/test.txt"
-           }
-        },
-        {
-            "name": "fileMove",
-           "parameters": {
-            "source": "C:/test.txt",
-             "destination": "D:/test.txt"
-           }
-        },
-       {
+  "tasks":[
+  {
+    "id": 1,
+    "enabled": true,
+    "ping": {
+      "target": "http://example.com",
+      "interval": 5000
+    },
+     "operations": [
+         {
             "name": "message",
             "parameters": {
-            "text": "Hello from server"
-         }
-       },
-      {
-        "name": "request",
-         "parameters": {
-            "text": "Do you want to continue?"
-           }
-      }
+              "text": "Ping to example.com completed"
+            }
+        }
+     ]
+  },
+  {
+    "id": 2,
+    "enabled": true,
+    "diskSpace": {
+      "disks": ["C:", "D:"],
+      "threshold": 80,
+      "interval": 10000
+    },
+     "operations": [
+        {
+           "name": "message",
+            "parameters": {
+              "text": "Disk space is low"
+            }
+       }
     ]
+  },
+  {
+    "id": 3,
+    "enabled": true,
+    "watchDog": {
+      "path": "/path/to/watch",
+      "mask": "*.log",
+      "interval": 1000
+    },
+      "operations": [
+          {
+            "name": "fileMove",
+            "parameters": {
+              "source": "/path/to/watch/file.log",
+               "destination": "/path/to/backup/file.log"
+            }
+          }
+      ]
+  },
+   {
+    "id": 4,
+    "enabled": true,
+    "ping": {
+       "target": "http://localhost",
+        "interval": 3000
+    },
+     "operations": [
+        {
+            "name": "request",
+            "parameters": {
+                "text": "Request from ping trigger"
+            }
+        }
+      ]
+    }
+  ]
 }

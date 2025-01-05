@@ -1,51 +1,64 @@
 #include "DiskSpaceTrigger.h"
-#include <QStorageInfo>
 #include <QDebug>
+#include <QStorageInfo>
 #include <QTimer>
 #include <QJsonObject>
-DiskSpaceTrigger::DiskSpaceTrigger(const QStringList &disks, int threshold, int interval, QObject *parent)
-    : Trigger(parent), disks(disks), threshold(threshold), interval(interval), timer(new QTimer(this))
+#include "Task.h"
+
+DiskSpaceTrigger::DiskSpaceTrigger(qlonglong taskId, Task* task, const QStringList& disks, int threshold, int interval, QObject* parent)
+    : Trigger(taskId, task, parent), m_disks(disks), m_threshold(threshold), m_interval(interval), m_timer(new QTimer(this))
 {
-    connect(timer, &QTimer::timeout, this, &DiskSpaceTrigger::checkDiskSpace);
+    connect(m_timer, &QTimer::timeout, this, &DiskSpaceTrigger::onTimer);
 }
-DiskSpaceTrigger::~DiskSpaceTrigger(){
+
+DiskSpaceTrigger::~DiskSpaceTrigger() {
     stop();
 }
-void DiskSpaceTrigger::start()
-{
-    if (timer && !timer->isActive()) {
-        timer->start(interval);
-        checkDiskSpace();
-    }
-}
-void DiskSpaceTrigger::stop() {
-    if (timer && timer->isActive()) {
-        timer->stop();
-    }
-}
-void DiskSpaceTrigger::checkDiskSpace()
-{
-    bool anyDiskBelowThreshold = false;
-    QJsonObject result;
-    for (const QString &disk : disks)
-    {
-        QStorageInfo storage(disk);
-        if (storage.isValid() )
-        {
-            qint64 freeSpace = storage.bytesAvailable() / (1024 * 1024);
-            if (freeSpace < threshold)
-            {
-                qDebug() << "Disk space on " << disk << " is below threshold: " << freeSpace << " MB";
-                anyDiskBelowThreshold = true;
-            }else {
-                qDebug() << "Disk space on " << disk << ": " << freeSpace << " MB";
-            }
-            result[disk] = static_cast<int>(freeSpace);
-        }else {
-            qDebug() << "Disk " << disk << " is not valid";
-        }
 
+QStringList DiskSpaceTrigger::getDisks() const {
+    return m_disks;
+}
+
+int DiskSpaceTrigger::getThreshold() const {
+    return m_threshold;
+}
+
+int DiskSpaceTrigger::getInterval() const {
+    return m_interval;
+}
+
+void DiskSpaceTrigger::start() {
+    if (m_timer && !m_timer->isActive()) {
+        m_timer->start(m_interval);
+        qDebug() << "DiskSpaceTrigger " << id() << " started.";
     }
-    result["anyDiskBelowThreshold"] = anyDiskBelowThreshold;
-    emit triggered(result);
+}
+
+void DiskSpaceTrigger::stop() {
+    if (m_timer && m_timer->isActive()) {
+        m_timer->stop();
+        qDebug() << "DiskSpaceTrigger " << id() << " stopped.";
+    }
+}
+
+void DiskSpaceTrigger::onTimer()
+{
+    if(!m_task->isEnabled()) return;
+    for (const QString &disk : m_disks) {
+        QStorageInfo storage(disk);
+        if (storage.isValid()) {
+            qlonglong freeSpace = storage.bytesFree() / (1024 * 1024); // Free space in MB
+            qlonglong totalSpace = storage.bytesTotal() / (1024 * 1024);
+            qlonglong usedSpace = totalSpace - freeSpace;
+            if (usedSpace > m_threshold){
+                QJsonObject data;
+                data["id"] = (qlonglong)id();
+                data["enabled"] = false;
+                emit stateChanged(data, nullptr);
+            }
+            qDebug() << "Disk " + disk + ": Total " + QString::number(totalSpace) + " MB, Used: " + QString::number(usedSpace) + " MB, Free " + QString::number(freeSpace) + " MB";
+        } else {
+            qDebug() << "Invalid disk " + disk;
+        }
+    }
 }

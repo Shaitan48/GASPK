@@ -3,11 +3,13 @@
 
 #include <QObject>
 #include <QTcpSocket>
-#include <QNetworkAccessManager>
 #include <QList>
-#include "Trigger.h"
+#include "Task.h"
+
 class QTcpSocket;
+class QNetworkAccessManager;
 class QNetworkReply;
+class Task;
 
 class Agent : public QObject
 {
@@ -22,19 +24,15 @@ private slots:
     void onReadyRead();
     void onDisconnected();
     void onReply(QNetworkReply* reply);
-    void onTriggered(const QJsonObject &result);
 
 private:
-    void sendMessage(const QString &message);
-    void connectToServer();
     void sendSystemInfo();
-    void loadTriggers();
-    void loadOperations();
-    void sendOperationResult(const QJsonObject& operationResult);
-    void performOperation(const QJsonObject &operation);
-    QTcpSocket* socket;
-    QNetworkAccessManager* manager;
-    QList<Trigger*> triggers;
+    void loadConfig();
+    Task* findTaskById(qlonglong id);
+    QTcpSocket* tcpSocket;
+    QNetworkAccessManager * manager;
+    QList<Task*> tasks;
+
 };
 
 #endif // AGENT_H

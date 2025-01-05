@@ -1,55 +1,60 @@
 #include "TriggerWatchDog.h"
-#include <QDirIterator>
 #include <QDebug>
+#include <QFileSystemWatcher>
+#include <QDir>
+#include <QTimer>
 #include <QJsonObject>
-#include <QJsonDocument>
-#include <QFile>
-#include <QFileInfo>
-#include <QDateTime>
-TriggerWatchDog::TriggerWatchDog(const QString &path, const QString &mask,  int interval, QObject *parent)
-    : Trigger(parent), path(path), mask(mask), interval(interval), timer(new QTimer(this))
+#include "Task.h"
+
+TriggerWatchDog::TriggerWatchDog(qlonglong taskId, Task* task, const QString& path, const QString& mask, int interval, QObject* parent)
+    : Trigger(taskId, task, parent), m_path(path), m_mask(mask), m_interval(interval), m_timer(new QTimer(this))
 {
-    connect(timer, &QTimer::timeout, this, &TriggerWatchDog::checkDir);
+    connect(m_timer, &QTimer::timeout, this, &TriggerWatchDog::onTimer);
 }
-TriggerWatchDog::~TriggerWatchDog(){
+TriggerWatchDog::~TriggerWatchDog() {
     stop();
 }
-void TriggerWatchDog::start()
-{
-    if (timer && !timer->isActive()) {
-        timer->start(interval);
-        checkDir();
-    }
+
+QString TriggerWatchDog::getPath() const {
+    return m_path;
 }
-void TriggerWatchDog::stop()
-{
-    if (timer && timer->isActive()) {
-        timer->stop();
+
+QString TriggerWatchDog::getMask() const {
+    return m_mask;
+}
+
+int TriggerWatchDog::getInterval() const {
+    return m_interval;
+}
+
+void TriggerWatchDog::start() {
+    if (m_timer && !m_timer->isActive()) {
+        m_timer->start(m_interval);
+        qDebug() << "TriggerWatchDog " << id() << " started.";
     }
 }
 
-void TriggerWatchDog::checkDir()
-{
-    QDirIterator it(path, QDirIterator::Subdirectories);
-    QJsonObject data;
-    bool found = false;
-    while (it.hasNext()) {
-        QString filePath = it.next();
-        QFileInfo fileInfo(filePath);
-        if(fileInfo.isFile()){
-            if(fileInfo.fileName().contains(mask, Qt::CaseInsensitive)){
-                qDebug() << "File detected: " << filePath;
-                data["filePath"] = filePath;
-                data["datetime"] =  QDateTime::currentDateTime().toString();
-                found = true;
-                break;
-            }
-        }
+void TriggerWatchDog::stop() {
+    if (m_timer && m_timer->isActive()) {
+        m_timer->stop();
+        qDebug() << "TriggerWatchDog " << id() << " stopped.";
+    }
+}
+
+void TriggerWatchDog::onTimer() {
+    if(!m_task->isEnabled()) return;
+    QDir dir(m_path);
+    if (!dir.exists()) {
+        qDebug() << "Path not exists" + m_path;
+        return;
     }
 
-    emit triggered(data);
-}
-bool TriggerWatchDog::isTriggered(const QJsonObject &agentData){
-    Q_UNUSED(agentData);
-    return true;
+    QStringList files = dir.entryList(QStringList() << m_mask, QDir::Files);
+    if(!files.isEmpty()){
+        QJsonObject data;
+        data["id"] = (qlonglong)id();
+        data["enabled"] = false;
+        emit stateChanged(data, nullptr);
+    }
+
 }

@@ -1,40 +1,32 @@
 #include "FileDeleteOperation.h"
-#include <QFile>
 #include <QDebug>
-#include <QUuid>
-FileDeleteOperation::FileDeleteOperation(QObject *parent) : Operation(parent)
+#include <QFile>
+
+FileDeleteOperation::FileDeleteOperation(qlonglong id, const QJsonObject &parameters, QObject *parent) : Operation(id, parent), m_parameters(parameters)
 {
 
 }
-QJsonObject FileDeleteOperation::execute(const QJsonObject &params)
+QJsonObject FileDeleteOperation::parameters() const
 {
- QJsonObject result;
- if(!params.contains("path") || !params["path"].isString()){
-   result["status"] = "error";
-   result["message"] = "Path parameter is not found";
-     return result;
- }
- QString path = params["path"].toString();
-   QFile file(path);
-   if(file.exists()){
-       if(file.remove()){
-              result["status"] = "success";
-               result["message"] = "File " + path + " deleted successfully";
-       }else{
-          result["status"] = "error";
-          result["message"] = "Could not delete file " + path;
-       }
-   }else{
-       result["status"] = "error";
-        result["message"] = "File " + path + " does not exist";
-   }
-
- return result;
+    return m_parameters;
 }
-QString FileDeleteOperation::getName() {
- return "fileDelete";
+QString FileDeleteOperation::name() const {
+    return "fileDelete";
 }
-QString FileDeleteOperation::getId()
-{
- return QUuid::createUuid().toString();
+void FileDeleteOperation::execute() {
+    if(m_parameters.contains("path") && m_parameters["path"].isString()){
+        QString path = m_parameters["path"].toString();
+        QFile file(path);
+        if(file.exists()){
+            if(file.remove()){
+                qDebug() << "File " + path + " deleted successfully";
+            } else {
+                qDebug() << "Could not delete file " + path;
+            }
+        } else {
+            qDebug() << "File " + path + " does not exist";
+        }
+    } else {
+        qDebug() << "Path parameter is not found";
+    }
 }

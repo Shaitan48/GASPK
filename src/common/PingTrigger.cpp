@@ -1,46 +1,42 @@
 #include "PingTrigger.h"
-#include <QProcess>
 #include <QDebug>
 #include <QTimer>
+#include "Task.h"
 #include <QJsonObject>
 
-PingTrigger::PingTrigger(const QString &target, int interval, QObject *parent) : Trigger(parent), target(target), interval(interval), timer(new QTimer(this)) {
-    connect(timer, &QTimer::timeout, this, &PingTrigger::ping);
+PingTrigger::PingTrigger(qlonglong taskId, Task* task, const QString& target, int interval, QObject* parent)
+    : Trigger(taskId, task, parent), m_target(target), m_interval(interval), m_timer(new QTimer(this))
+{
+    connect(m_timer, &QTimer::timeout, this, &PingTrigger::onTimer);
 }
-PingTrigger::~PingTrigger(){
-    stop();
-}
+
+QString PingTrigger::getTarget() const { return m_target; }
+
+int PingTrigger::getInterval() const { return m_interval; }
+
+
 void PingTrigger::start() {
-    if (timer && !timer->isActive()) {
-        timer->start(interval);
-        ping();
+    if (m_timer && !m_timer->isActive()) {
+        m_timer->start(m_interval);
+        qDebug() << "PingTrigger " << id() << " started.";
     }
 }
 
 void PingTrigger::stop() {
-    if (timer && timer->isActive()) {
-        timer->stop();
+    if (m_timer && m_timer->isActive()) {
+        m_timer->stop();
+        qDebug() << "PingTrigger " << id() << " stopped.";
     }
 }
-void PingTrigger::ping() {
-    QProcess *process = new QProcess(this);
-#ifdef Q_OS_WIN
-    QStringList args = {"-n", "1", target};
-    process->start("ping", args);
-#else
-    QStringList args = {"-c", "1", target};
-    process->start("ping", args);
-#endif
-    process->waitForFinished();
-    QJsonObject result;
-    if (process->exitCode() == 0) {
-        qDebug() << "Ping to " << target << " successful.";
-        result["success"] = true;
 
-    } else {
-        qDebug() << "Ping to " << target << " failed.";
-        result["success"] = false;
-    }
-    emit triggered(result);
-    process->deleteLater();
+void PingTrigger::onTimer()
+{
+    if(!m_task->isEnabled()) return;
+
+    // Выполните пинг, если нужно
+    QJsonObject data;
+    data["id"] = (qlonglong)id();
+    data["enabled"] = false;
+    emit stateChanged(data, nullptr);
+    qDebug() << "Ping " + m_target;
 }

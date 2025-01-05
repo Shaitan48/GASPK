@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 project(QtClientServerWithQML)
 
 # Указываем, что проект использует Qt6
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Sql)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Sql)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/common)
 # Указываем файлы исходного кода для клиента и сервера
 set(CLIENT_SOURCES
@@ -51,6 +51,8 @@ qt_wrap_cpp(FILEMOVEOPERATION_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/common
 qt_wrap_cpp(MESSAGEOPERATION_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/common/MessageOperation.h)
 qt_wrap_cpp(REQUESTOPERATION_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/common/RequestOperation.h)
 qt_wrap_cpp(MAINWINDOW_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/client/MainWindow.h)
+qt_wrap_cpp(TASK_HEADERS_MOC ${CMAKE_CURRENT_SOURCE_DIR}/src/common/Task.h)
+
 
 # Создаем исполнимые файлы для сервера и клиента
 add_executable(Client ${CLIENT_SOURCES}
@@ -90,7 +92,7 @@ add_executable(Server ${SERVER_SOURCES}
     ${TRIGGER_HEADERS_MOC}
     src/common/Operation.h
     ${OPERATION_HEADERS_MOC}
-     src/common/Task.h
+    src/common/Task.h
     ${TASK_HEADERS_MOC}
      src/common/TriggerWatchDog.h
      ${TRIGGERWATCHDOG_HEADERS_MOC}

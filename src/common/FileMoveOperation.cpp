@@ -1,50 +1,34 @@
 #include "FileMoveOperation.h"
-#include <QFile>
 #include <QDebug>
-#include <QUuid>
+#include <QFile>
 
-FileMoveOperation::FileMoveOperation(QObject *parent) : Operation(parent)
+FileMoveOperation::FileMoveOperation(qlonglong id, const QJsonObject &parameters, QObject *parent) : Operation(id, parent), m_parameters(parameters)
 {
 
 }
-
-QJsonObject FileMoveOperation::execute(const QJsonObject &params)
+QJsonObject FileMoveOperation::parameters() const
 {
-    QJsonObject result;
-    if(!params.contains("source") || !params["source"].isString() || !params.contains("destination") || !params["destination"].isString()){
-      result["status"] = "error";
-      result["message"] = "Source or destination parameter not found";
-        return result;
-    }
-    QString source = params["source"].toString();
-      QString destination = params["destination"].toString();
-       QFile sourceFile(source);
-       QFile destinationFile(destination);
-       if(!sourceFile.exists()){
-           result["status"] = "error";
-           result["message"] = "Source file " + source + " does not exist";
-              return result;
-       }
-          if(destinationFile.exists()){
-              result["status"] = "error";
-            result["message"] = "Destination file " + destination + " exists";
-               return result;
-         }
-      if(sourceFile.rename(destination)){
-           result["status"] = "success";
-            result["message"] = "File " + source + " moved to " + destination + " successfully";
-      }else{
-         result["status"] = "error";
-         result["message"] = "Could not move file " + source + " to " + destination;
-      }
-    return result;
+    return m_parameters;
 }
-
-QString FileMoveOperation::getName() {
+QString FileMoveOperation::name() const {
     return "fileMove";
 }
-
-QString FileMoveOperation::getId()
-{
-    return QUuid::createUuid().toString();
+void FileMoveOperation::execute(){
+    if(!m_parameters.contains("source") || !m_parameters["source"].isString() || !m_parameters.contains("destination") || !m_parameters["destination"].isString()){
+        qDebug() << "Source or destination parameter not found";
+    } else {
+        QString source = m_parameters["source"].toString();
+        QString destination = m_parameters["destination"].toString();
+        QFile sourceFile(source);
+        QFile destinationFile(destination);
+        if(!sourceFile.exists()){
+            qDebug() << "Source file " + source + " does not exist";
+        } else if(destinationFile.exists()){
+            qDebug() << "Destination file " + destination + " exists";
+        } else if(sourceFile.rename(destination)){
+            qDebug() << "File " + source + " moved to " + destination + " successfully";
+        } else {
+            qDebug() << "Could not move file " + source + " to " + destination;
+        }
+    }
 }

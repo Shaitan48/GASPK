@@ -3,24 +3,27 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QTcpSocket>
+class Task;
 
 class Trigger : public QObject
 {
     Q_OBJECT
 public:
-    explicit Trigger(QObject *parent = nullptr);
+    explicit Trigger(qlonglong taskId, Task* task, QObject *parent = nullptr);
     virtual ~Trigger() = default;
-    virtual void start();
-    virtual void stop();
-    virtual bool isTriggered(const QJsonObject &agentData) {
-        Q_UNUSED(agentData);
-        return false;
-    };
 
+    qlonglong id() const;
+    virtual void start() = 0;
+    virtual void stop() = 0;
 
 signals:
-    void triggered(const QJsonObject &result);
+    void stateChanged(const QJsonObject& taskStateChange, QTcpSocket* client);
 
+protected:
+    Task* m_task;
+private:
+    qlonglong m_id;
 };
 
 #endif // TRIGGER_H

@@ -1,33 +1,28 @@
+// src/common/RequestOperation.cpp
 #include "RequestOperation.h"
 #include <QDebug>
-#include <QUuid>
 
-RequestOperation::RequestOperation(QObject *parent) : Operation(parent)
+RequestOperation::RequestOperation(qlonglong id, const QJsonObject &parameters, QObject *parent) : Operation(id, parent), m_parameters(parameters)
 {
-
 }
 
-QJsonObject RequestOperation::execute(const QJsonObject &params)
+QJsonObject RequestOperation::parameters() const
 {
-      QJsonObject result;
-    if(!params.contains("text") || !params["text"].isString()){
-        result["status"] = "error";
-         result["message"] = "Text parameter not found";
-            return result;
-     }
-   QString text = params["text"].toString();
-     qDebug() << "Request operation " << text;
-     result["status"] = "success";
-      result["message"] = "Request was successfully sent";
-     result["user_action_required"] = true;
-      return result;
+    return m_parameters;
 }
 
-QString RequestOperation::getName() {
+QString RequestOperation::name() const
+{
     return "request";
 }
 
-QString RequestOperation::getId()
+void RequestOperation::execute()
 {
-    return QUuid::createUuid().toString();
+    if (m_parameters.contains("text") && m_parameters["text"].isString()) {
+        QString text = m_parameters["text"].toString();
+        qDebug() << "Requesting: " << text;
+        // Добавьте вашу логику выполнения запроса здесь
+    } else {
+        qDebug() << "Request operation: No text parameter found.";
+    }
 }

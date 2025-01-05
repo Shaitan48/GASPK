@@ -1,28 +1,22 @@
 #include "MessageOperation.h"
 #include <QDebug>
-#include <QUuid>
-MessageOperation::MessageOperation(QObject *parent) : Operation(parent)
+
+MessageOperation::MessageOperation(qlonglong id, const QJsonObject &parameters, QObject *parent) : Operation(id, parent), m_parameters(parameters)
 {
 
 }
-QJsonObject MessageOperation::execute(const QJsonObject &params)
+QJsonObject MessageOperation::parameters() const
 {
-    QJsonObject result;
-    if(!params.contains("text") || !params["text"].isString()){
-       result["status"] = "error";
-       result["message"] = "Text parameter not found";
-        return result;
-    }
-   QString text = params["text"].toString();
-    qDebug() << "Message operation: " << text;
-     result["status"] = "success";
-    result["message"] = "Message was successfully shown";
-    return result;
+    return m_parameters;
 }
-QString MessageOperation::getName() {
+QString MessageOperation::name() const {
     return "message";
 }
-QString MessageOperation::getId()
-{
-    return QUuid::createUuid().toString();
+void MessageOperation::execute(){
+    if(m_parameters.contains("text") && m_parameters["text"].isString()){
+        QString text = m_parameters["text"].toString();
+        qDebug() << text;
+    } else {
+        qDebug() << "Text parameter not found";
+    }
 }

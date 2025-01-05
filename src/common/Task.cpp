@@ -1,38 +1,63 @@
 #include "Task.h"
-#include <QDebug>
-Task::Task(QObject *parent) : QObject(parent)
+#include "Trigger.h"
+#include "Operation.h"
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QTcpSocket>
+
+Task::Task(qlonglong id, QObject *parent) : QObject(parent), m_id(id), m_enabled(true)
 {
 }
-
-void Task::addTrigger(Trigger *trigger)
-{
-    triggers.append(trigger);
+Task::~Task() {
+    for (const auto& trigger : m_triggers) {
+        delete trigger;
+    }
+    for(const auto &operation : m_operations){
+        delete operation;
+    }
 }
 
-void Task::addOperation(Operation *operation)
-{
-    operations.append(operation);
+qlonglong Task::id() const {
+    return m_id;
 }
 
-void Task::process(const QJsonObject &agentData)
-{
-    for (Trigger* trigger : triggers) {
-        if (trigger->isTriggered(agentData)) {
-            qDebug() << "Task: Triggered";
-            for (Operation *operation : operations) {
-                operation->execute(agentData);
-            }
-            return;
+bool Task::isEnabled() const {
+    return m_enabled;
+}
+
+void Task::setEnabled(bool enabled) {
+    m_enabled = enabled;
+    if (m_enabled){
+        for (const auto& trigger : m_triggers) {
+            trigger->start();
+        }
+    } else{
+        for (const auto& trigger : m_triggers) {
+            trigger->stop();
         }
     }
 }
 
-Task::~Task()
+void Task::addTrigger(Trigger* trigger)
 {
-    for (Trigger* trigger : triggers) {
-        delete trigger;
+    m_triggers.append(trigger);
+    if (m_enabled){
+        trigger->start();
     }
-    for(Operation* operation: operations){
-        delete operation;
-    }
+}
+void Task::addOperation(Operation* operation)
+{
+    m_operations.append(operation);
+}
+QList<Trigger*> Task::getTriggers() const {
+    return m_triggers;
+}
+QList<Operation*> Task::getOperations() const {
+    return m_operations;
+}
+QJsonObject Task::toJson() const {
+    QJsonObject json;
+    json["id"] = (qlonglong)m_id;
+    json["enabled"] = m_enabled;
+    return json;
 }

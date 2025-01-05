@@ -3,22 +3,16 @@
 
 #include <QObject>
 #include <QTcpServer>
-#include <QNetworkAccessManager>
-#include <QJsonObject>
+#include <QTcpSocket>
+#include <QMap>
 #include <QList>
-#include <QString>
-#include <QSqlDatabase>
-#include "Trigger.h"
-struct AuthAgent {
-    QString username;
-    QString hostname;
+#include "Task.h"
+#include <QNetworkAccessManager>
 
-    bool operator==(const AuthAgent& other) const {
-        return username == other.username && hostname == other.hostname;
-    }
-};
 class QTcpSocket;
 class QNetworkReply;
+class Task;
+
 class Server : public QObject
 {
     Q_OBJECT
@@ -29,23 +23,21 @@ public:
 
 private slots:
     void onNewConnection();
-    void handleClient(QTcpSocket *socket);
+    void onReadyRead();
+    void onDisconnected();
     void onReply(QNetworkReply* reply);
 
 private:
-    void loadConfig();
-    QString getFormattedDateTime();
-    QTcpServer* server;
-    QNetworkAccessManager* manager;
-    int serverPort;
-    QList<AuthAgent> allowedAgents;
-    QSqlDatabase db;
-    QString dbHost;
-    int dbPort;
-    QString dbUsername;
-    QString dbPassword;
-    QString dbName;
-    QJsonObject config;
+    void sendOperationsToClient(QTcpSocket* client);
+    void sendSystemInfoToClient(QTcpSocket* client);
+    void loadTasksFromFile();
+    void saveTasksToFile() const;
+    void handleTaskStateChanged(const QJsonObject & taskStateChange, QTcpSocket* client);
+    void sendTriggersToAgent(QTcpSocket* agent);
+    QTcpServer* tcpServer;
+    QNetworkAccessManager * manager;
+    QMap<QTcpSocket*, QString> clients;
+    QList<Task*> tasks;
 };
 
 #endif // SERVER_H

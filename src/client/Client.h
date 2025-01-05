@@ -3,11 +3,10 @@
 
 #include <QObject>
 #include <QTcpSocket>
-#include <QNetworkAccessManager>
-#include "MainWindow.h"
-
+#include <QList>
+#include "Task.h"
 class QTcpSocket;
-class QNetworkReply;
+class Task;
 
 class Client : public QObject
 {
@@ -16,27 +15,15 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = nullptr);
     ~Client() override;
-
 private slots:
     void onConnected();
     void onReadyRead();
     void onDisconnected();
-    void onReply(QNetworkReply* reply);
-
-
+    void handleTaskStateChanged(const QJsonObject& taskStateChange, QTcpSocket* client);
 private:
-    void sendMessage(const QString &message);
-    void connectToServer();
-    void sendSystemInfo();
-    void loadOperations();
-    void performOperation(const QJsonObject &operation);
-
-    QTcpSocket* socket;
-    QNetworkAccessManager* manager;
-    MainWindow* mainWindow;
-
-
-    bool authorized = false;
+    QTcpSocket* tcpSocket;
+    QList<Task*> tasks;
+    void loadConfig();
 };
 
 #endif // CLIENT_H

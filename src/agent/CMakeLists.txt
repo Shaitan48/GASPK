@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.16)
 
 project(agent)
@@ -12,21 +13,16 @@ set(AGENT_SOURCES
     Agent.cpp
 )
 
-set(AGENT_HEADERS
-    Agent.h
-)
-# Add include directories
-include_directories(${CMAKE_SOURCE_DIR}/../common/)
-add_executable(agent
-    ${AGENT_SOURCES}
-    ${AGENT_HEADERS}
-)
+add_executable(agent ${AGENT_SOURCES})
 
+target_include_directories(agent PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(agent
     Qt6::Core
     Qt6::Sql
     Qt6::Network
+    common
 )
+
 # Copy config.json to output directory
 add_custom_command(TARGET agent POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy

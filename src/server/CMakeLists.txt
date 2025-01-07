@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.16)
 
 project(server)
@@ -13,21 +14,14 @@ set(SERVER_SOURCES
     SqlDatabase.cpp
 )
 
-set(SERVER_HEADERS
-    Server.h
-    SqlDatabase.h
-)
-# Add include directories
-include_directories(${CMAKE_SOURCE_DIR}/../common/)
-add_executable(server
-    ${SERVER_SOURCES}
-    ${SERVER_HEADERS}
-)
+add_executable(server ${SERVER_SOURCES})
 
+target_include_directories(server PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(server
     Qt6::Core
     Qt6::Sql
     Qt6::Network
+    common
 )
 
 # Copy config.json to output directory

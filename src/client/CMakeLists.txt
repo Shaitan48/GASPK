@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.16)
 
 project(client)
@@ -12,22 +13,17 @@ set(CLIENT_SOURCES
     Client.cpp
 )
 
-set(CLIENT_HEADERS
-    Client.h
-)
-include_directories(${CMAKE_SOURCE_DIR}/../common/)
-add_executable(client
-    ${CLIENT_SOURCES}
-    ${CLIENT_HEADERS}
-)
+add_executable(client ${CLIENT_SOURCES})
 
+target_include_directories(client PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(client
     Qt6::Core
     Qt6::Sql
     Qt6::Network
     Qt6::Widgets
-    common_target
+    common
 )
+
 # Copy config.json to output directory
 add_custom_command(TARGET client POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy

@@ -121,7 +121,7 @@ void Server::loadTasksFromFile()
                                         if(pingConfig.contains("target") && pingConfig.contains("interval")) {
                                             QString target = pingConfig["target"].toString();
                                             int interval = pingConfig["interval"].toInt();
-                                            PingTrigger *trigger = new PingTrigger(id,task, target, interval, this);
+                                            //PingTrigger *trigger = new PingTrigger(id,task, target, interval, this);
                                             task->addTrigger(trigger);
                                         }
                                     }

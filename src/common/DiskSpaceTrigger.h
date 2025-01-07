@@ -4,30 +4,25 @@
 #include "Trigger.h"
 #include <QStringList>
 #include <QTimer>
-class Task;
 
 class DiskSpaceTrigger : public Trigger
 {
     Q_OBJECT
 public:
-    DiskSpaceTrigger(qlonglong taskId, Task* task, const QStringList& disks, int threshold, int interval, QObject* parent = nullptr);
+    explicit DiskSpaceTrigger(qlonglong id, QObject *parent = nullptr,const QStringList& disks = {}, int threshold = 80, int interval = 60);
     ~DiskSpaceTrigger() override;
-
-    QStringList getDisks() const;
-    int getThreshold() const;
-    int getInterval() const;
-
     void start() override;
     void stop() override;
-
-private slots:
-    void onTimer();
+    QStringList disks() const;
+    int threshold() const;
+    int interval() const;
 
 private:
     QStringList m_disks;
     int m_threshold;
     int m_interval;
-    QTimer* m_timer;
+    QTimer *m_timer;
+
 };
 
 #endif // DISKSPACETRIGGER_H

@@ -1,29 +1,28 @@
 #ifndef PINGTRIGGER_H
 #define PINGTRIGGER_H
 
-#include "Trigger.h"
+#include <QObject>
 #include <QString>
 #include <QTimer>
-class Task;
+#include "Trigger.h"
+
 class PingTrigger : public Trigger
 {
     Q_OBJECT
 public:
-    explicit PingTrigger(qlonglong taskId, Task* task, const QString& target, int interval, QObject* parent = nullptr);
-    ~PingTrigger() override = default;
-
-    QString getTarget() const;
-    int getInterval() const;
-
+    explicit PingTrigger(qlonglong id, QObject *parent = nullptr, const QString &target = "", int interval = 60);
+    ~PingTrigger() override;
     void start() override;
     void stop() override;
-private slots:
-    void onTimer();
+    QString target() const;
+    int interval() const;
 
 private:
     QString m_target;
     int m_interval;
-    QTimer* m_timer;
+    QTimer *m_timer;
+    // Удалите эту зависимость:
+    // QObject *m_task;
 };
 
 #endif // PINGTRIGGER_H

@@ -1,63 +1,77 @@
 #include "Task.h"
 #include "Trigger.h"
 #include "Operation.h"
-#include <QJsonObject>
-#include <QJsonArray>
+#include <QDebug>
 #include <QTcpSocket>
-
-Task::Task(qlonglong id, QObject *parent) : QObject(parent), m_id(id), m_enabled(true)
+Task::Task(qlonglong id, QObject *parent)
+    : QObject(parent), _id(id)
 {
+    qDebug() << "Task created with id " + QString::number(id);
 }
-Task::~Task() {
-    for (const auto& trigger : m_triggers) {
+Task::~Task()
+{
+    qDebug() << "Task with id " + QString::number(_id) + " deleted.";
+    for(auto trigger: _triggers){
         delete trigger;
     }
-    for(const auto &operation : m_operations){
+    for(auto operation : _operations){
         delete operation;
     }
 }
-
-qlonglong Task::id() const {
-    return m_id;
+void Task::addTrigger(Trigger *trigger)
+{
+    _triggers.append(trigger);
 }
-
-bool Task::isEnabled() const {
-    return m_enabled;
+void Task::removeTrigger(Trigger *trigger)
+{
+    _triggers.removeOne(trigger);
 }
-
-void Task::setEnabled(bool enabled) {
-    m_enabled = enabled;
-    if (m_enabled){
-        for (const auto& trigger : m_triggers) {
-            trigger->start();
-        }
-    } else{
-        for (const auto& trigger : m_triggers) {
-            trigger->stop();
+QList<Trigger *> Task::getTriggers() const
+{
+    return _triggers;
+}
+qlonglong Task::id() const{
+    return _id;
+}
+bool Task::isEnabled() const
+{
+    return _enabled;
+}
+void Task::setEnabled(bool enabled)
+{
+    if(enabled != _enabled){
+        _enabled = enabled;
+        QJsonObject taskStateChange;
+        taskStateChange["id"] = (qlonglong)id();
+        taskStateChange["enabled"] = isEnabled();
+        emit stateChanged(taskStateChange, nullptr);
+        qDebug() << "Task " + QString::number(_id) + " state changed. Enabled: " << enabled;
+        for(const auto& trigger : _triggers){
+            if (enabled){
+                trigger->start();
+            } else {
+                trigger->stop();
+            }
         }
     }
 }
+void Task::addOperation(Operation *operation)
+{
+    _operations.append(operation);
+}
+void Task::removeOperation(Operation *operation)
+{
+    _operations.removeOne(operation);
+}
+QList<Operation *> Task::getOperations() const
+{
+    return _operations;
+}
 
-void Task::addTrigger(Trigger* trigger)
+QJsonObject Task::toJson() const
 {
-    m_triggers.append(trigger);
-    if (m_enabled){
-        trigger->start();
-    }
-}
-void Task::addOperation(Operation* operation)
-{
-    m_operations.append(operation);
-}
-QList<Trigger*> Task::getTriggers() const {
-    return m_triggers;
-}
-QList<Operation*> Task::getOperations() const {
-    return m_operations;
-}
-QJsonObject Task::toJson() const {
-    QJsonObject json;
-    json["id"] = (qlonglong)m_id;
-    json["enabled"] = m_enabled;
-    return json;
+    QJsonObject taskJson;
+    taskJson["id"] = (qlonglong)_id;
+    taskJson["enabled"] = _enabled;
+    return taskJson;
 }

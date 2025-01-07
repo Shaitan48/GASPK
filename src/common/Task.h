@@ -3,33 +3,33 @@
 
 #include <QObject>
 #include <QList>
-#include "Trigger.h"
-#include "Operation.h"
 #include <QJsonObject>
+
 class Trigger;
 class Operation;
 class Task : public QObject
 {
     Q_OBJECT
+
 public:
     explicit Task(qlonglong id, QObject *parent = nullptr);
     ~Task() override;
+    void addTrigger(Trigger* trigger);
+    void removeTrigger(Trigger* trigger);
+    QList<Trigger*> getTriggers() const;
     qlonglong id() const;
     bool isEnabled() const;
     void setEnabled(bool enabled);
-    void addTrigger(Trigger* trigger);
     void addOperation(Operation* operation);
-    QList<Trigger*> getTriggers() const;
+    void removeOperation(Operation* operation);
     QList<Operation*> getOperations() const;
     QJsonObject toJson() const;
-signals:
-    void stateChanged(const QJsonObject& taskStateChange, QTcpSocket* client);
-
+    Q_SIGNAL void stateChanged(const QJsonObject& taskStateChange, QTcpSocket* client);
 private:
-    qlonglong m_id;
-    bool m_enabled;
-    QList<Trigger*> m_triggers;
-    QList<Operation*> m_operations;
+    qlonglong _id;
+    bool _enabled = true;
+    QList<Trigger*> _triggers;
+    QList<Operation*> _operations;
 };
 
 #endif // TASK_H

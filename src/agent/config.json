@@ -1,0 +1,8 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 1234
+  },
+  "logLevel": "debug",
+  "logLevelAvailable": "Возможные значения: debug, info, warning, error, none"
+}

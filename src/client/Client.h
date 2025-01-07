@@ -3,10 +3,9 @@
 
 #include <QObject>
 #include <QTcpSocket>
-#include <QList>
-#include "Task.h"
+#include <QFile>
+#include <QString>
 class QTcpSocket;
-class Task;
 
 class Client : public QObject
 {
@@ -15,15 +14,23 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = nullptr);
     ~Client() override;
+
 private slots:
     void onConnected();
     void onReadyRead();
     void onDisconnected();
-    void handleTaskStateChanged(const QJsonObject& taskStateChange, QTcpSocket* client);
+
 private:
-    QTcpSocket* tcpSocket;
-    QList<Task*> tasks;
     void loadConfig();
+    void logMessage(const QString& message);
+    bool shouldLog(const QString& level) const;
+    void sendSystemInfo();
+    QTcpSocket* tcpSocket;
+    QString host;
+    int port;
+    QFile logFile;
+    QString logLevel = "debug";
+
 };
 
 #endif // CLIENT_H

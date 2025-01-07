@@ -3,15 +3,16 @@
 
 #include <QObject>
 #include <QTcpServer>
-#include <QTcpSocket>
 #include <QMap>
 #include <QList>
-#include "Task.h"
-#include <QNetworkAccessManager>
+#include "../common/Task.h"
+#include "SqlDatabase.h"
 
+class QTcpServer;
 class QTcpSocket;
+class QNetworkAccessManager;
 class QNetworkReply;
-class Task;
+class QJsonObject;
 
 class Server : public QObject
 {
@@ -26,18 +27,24 @@ private slots:
     void onReadyRead();
     void onDisconnected();
     void onReply(QNetworkReply* reply);
+    void handleTaskStateChanged(const QJsonObject& taskStateChange, QTcpSocket* client);
+
 
 private:
-    void sendOperationsToClient(QTcpSocket* client);
-    void sendSystemInfoToClient(QTcpSocket* client);
     void loadTasksFromFile();
     void saveTasksToFile() const;
-    void handleTaskStateChanged(const QJsonObject & taskStateChange, QTcpSocket* client);
     void sendTriggersToAgent(QTcpSocket* agent);
+    void sendOperationsToClient(QTcpSocket* client);
+    void sendAuthResult(QTcpSocket* client, bool authResult);
+    void sendSystemInfoToClient(QTcpSocket* client);
     QTcpServer* tcpServer;
     QNetworkAccessManager * manager;
     QMap<QTcpSocket*, QString> clients;
     QList<Task*> tasks;
+    QList<QJsonObject> allowedAgents;
+    bool isAgentAllowed(const QString& username, const QString& hostname) const;
+    SqlDatabase* db;
+
 };
 
 #endif // SERVER_H

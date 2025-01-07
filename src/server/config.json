@@ -17,11 +17,11 @@
     }
   ],
   "database": {
-    "host": "192.168.3.7",
-    "port": 1433,
-    "username": "your_username",
-    "password": "your_password",
-    "database": "your_database"
+    "type": "mssql",
+    "server": "kurdiukov.com",
+    "database": "PU_GASPK",
+    "user": "sa",
+    "password": "Qwerty11"
   },
   "tasks":[
   {

@@ -5,31 +5,54 @@
 #include <QDataStream>
 #include <QJsonObject>
 #include <QJsonDocument>
-#include "Task.h"
-#include "Operation.h"
+#include <QHostInfo>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
-#include <QJsonArray>
-#include <QMap>
+#include <QTextStream>
 Client::Client(QObject *parent) : QObject(parent), tcpSocket(new QTcpSocket(this))
 {
     connect(tcpSocket, &QTcpSocket::connected, this, &Client::onConnected);
     connect(tcpSocket, &QTcpSocket::readyRead, this, &Client::onReadyRead);
     connect(tcpSocket, &QTcpSocket::disconnected, this, &Client::onDisconnected);
+
+    logFile.setFileName(QDir::currentPath() + "/client.log");
+    if (!logFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qDebug() << "Could not open log file " + logFile.fileName() + " " + logFile.errorString();
+    }
     loadConfig();
-    qDebug() << "Client started.";
+    logMessage("Client started.");
 }
-Client::~Client() {
-    for(const auto& task : tasks){
-        delete task;
+
+Client::~Client()
+{
+    if (logFile.isOpen()) {
+        logFile.close();
+    }
+}
+bool Client::shouldLog(const QString& level) const {
+    if (logLevel == "none") return false;
+    if (logLevel == "debug") return true;
+    if (level == "info" && (logLevel == "info" || logLevel == "warning" || logLevel == "error")) return true;
+    if (level == "warning" && (logLevel == "warning" || logLevel == "error")) return true;
+    if (level == "error" && logLevel == "error") return true;
+    return false;
+}
+void Client::logMessage(const QString& message) {
+    if (shouldLog("debug")) {
+        qDebug() << message;
+    }
+    if (logFile.isOpen()) {
+        QTextStream out(&logFile);
+        out << QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss ") << message << "\n";
+        logFile.flush();
     }
 }
 void Client::loadConfig()
 {
     QFile file(QDir::currentPath() + "/config.json");
     if (!file.open(QIODevice::ReadOnly)) {
-        qDebug() << "Could not open config file " + file.fileName() + " " + file.errorString();
+        logMessage("Could not open config file " + file.fileName() + " " + file.errorString());
         return;
     }
     QByteArray jsonData = file.readAll();
@@ -37,7 +60,7 @@ void Client::loadConfig()
     QJsonParseError jsonError;
     QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonData, &jsonError);
     if(jsonError.error != QJsonParseError::NoError) {
-        qDebug() << "Could not parse json from config file " + file.fileName() + " " + jsonError.errorString();
+        logMessage("Could not parse json from config file " + file.fileName() + " " + jsonError.errorString());
         return;
     }
     if(jsonDoc.isObject()){
@@ -45,85 +68,59 @@ void Client::loadConfig()
         if (config.contains("server") && config["server"].isObject()) {
             QJsonObject serverConfig = config["server"].toObject();
             if(serverConfig.contains("host") && serverConfig.contains("port")){
-                QString host = serverConfig["host"].toString();
-                int port = serverConfig["port"].toInt();
+                host = serverConfig["host"].toString();
+                port = serverConfig["port"].toInt();
                 tcpSocket->connectToHost(host, port);
             }
         }
+        if(config.contains("logLevel")){
+            logLevel = config["logLevel"].toString("debug");
+        }
     }
+
 }
 void Client::onConnected() {
-    qDebug() << "Connected to server.";
+    if (shouldLog("info"))
+        logMessage("Connected to server.");
+    sendSystemInfo();
 }
 void Client::onReadyRead() {
     QByteArray data = tcpSocket->readAll();
-    qDebug() << "Data from server: " << data;
+    if (shouldLog("debug"))
+        logMessage("Data from server: " + QString(data));
     QJsonParseError jsonError;
     QJsonDocument jsonDoc = QJsonDocument::fromJson(data, &jsonError);
     if (jsonError.error == QJsonParseError::NoError){
-        if(jsonDoc.isArray()){
-            QJsonArray operationsArray = jsonDoc.array();
-            for(const auto &operationValue : operationsArray){
-                if(operationValue.isObject()){
-                    QJsonObject operationJson = operationValue.toObject();
-                    if(operationJson.contains("id") && operationJson.contains("enabled")){
-                        qlonglong id = operationJson["id"].toVariant().toLongLong();
-                        bool enabled = operationJson["enabled"].toBool();
-                        Task* task = new Task(id, this);
-                        connect(task, &Task::stateChanged, this, &Client::handleTaskStateChanged);
-                        task->setEnabled(enabled);
-                        tasks.append(task);
-                        if(operationJson.contains("name")){
-                            QString operationName = operationJson["name"].toString();
-                            if(operationName == "fileDelete") {
-                                QJsonObject parameters;
-                                QJsonObject taskStateChange;
-                                taskStateChange["id"] = (qlonglong)id;
-                                taskStateChange["enabled"] = false;
-                                task->stateChanged(taskStateChange, nullptr);
-                            }
-                            else if (operationName == "fileCopy"){
-                                QJsonObject parameters;
-                                QJsonObject taskStateChange;
-                                taskStateChange["id"] = (qlonglong)id;
-                                taskStateChange["enabled"] = false;
-                                task->stateChanged(taskStateChange, nullptr);
-                            } else if (operationName == "fileMove"){
-                                QJsonObject parameters;
-                                QJsonObject taskStateChange;
-                                taskStateChange["id"] = (qlonglong)id;
-                                taskStateChange["enabled"] = false;
-                                task->stateChanged(taskStateChange, nullptr);
-                            }
-                            else if (operationName == "message"){
-                                QJsonObject parameters;
-                                QJsonObject taskStateChange;
-                                taskStateChange["id"] = (qlonglong)id;
-                                taskStateChange["enabled"] = false;
-                                task->stateChanged(taskStateChange, nullptr);
-                            }
-                            else if (operationName == "request"){
-                                QJsonObject parameters;
-                                QJsonObject taskStateChange;
-                                taskStateChange["id"] = (qlonglong)id;
-                                taskStateChange["enabled"] = false;
-                                task->stateChanged(taskStateChange, nullptr);
-                            }
-                        }
-                    }
+        if(jsonDoc.isObject()){
+            QJsonObject json = jsonDoc.object();
+            if(json.contains("authResult"))
+            {
+                bool authResult = json["authResult"].toBool();
+                if (authResult)
+                {
+                    if (shouldLog("info"))
+                        logMessage("Authorization success.");
+                }else{
+                    if (shouldLog("warning"))
+                        logMessage("Authorization failed!");
+                    tcpSocket->disconnectFromHost();
                 }
-
             }
         }
+
     }
 }
 void Client::onDisconnected() {
-    qDebug() << "Disconnected from server.";
+    if (shouldLog("info"))
+        logMessage("Disconnected from server.");
 }
-void Client::handleTaskStateChanged(const QJsonObject& taskStateChange, QTcpSocket* client) {
-    if(taskStateChange.contains("id") && taskStateChange.contains("enabled")){
-        qlonglong id = taskStateChange["id"].toVariant().toLongLong();
-        bool enabled = taskStateChange["enabled"].toBool();
-        qDebug() << "Task " + QString::number(id) + " state changed. Enabled: " << enabled;
-    }
+void Client::sendSystemInfo() {
+    QJsonObject systemInfo;
+    systemInfo["hostname"] = QHostInfo::localHostName();
+    systemInfo["username"] = QString::fromUtf8(qgetenv("USERNAME"));
+
+    QJsonDocument jsonDoc(systemInfo);
+    tcpSocket->write(jsonDoc.toJson());
+    if (shouldLog("debug"))
+        logMessage("Sent system info to server: " + QString(jsonDoc.toJson()));
 }

@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QNetworkRequest>
 #include <QUrl>
+#include <QSqlError>
 
 Server::Server(QObject *parent)
     : QObject(parent)
@@ -44,7 +45,7 @@ void Server::stopServer()
 
 void Server::sendRequest(const QString &url)
 {
-    QNetworkRequest request(QUrl(url));
+    QNetworkRequest request((QUrl(url)));
     networkManager->get(request);
 }
 

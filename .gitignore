@@ -518,3 +518,4 @@ build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/src/server/server_autogen/mocs_compila
 build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/src/server/server_autogen/timestamp
 build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/Testing/Temporary/LastTest.log
 CMakeLists.txt.user
+/build

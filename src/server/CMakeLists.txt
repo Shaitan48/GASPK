@@ -1,25 +1,31 @@
-cmake_minimum_required(VERSION 3.16)
+# ============================================
+# Project: GASPK
+# File: CMakeLists.txt (server)
+# Description: CMake configuration for the server module.
+# Author: GASPK Team
+# Last Updated: 2025-01-08
+# ============================================
 
-project(server)
+# Find the Qt6 package
+find_package(Qt6 REQUIRED COMPONENTS Core Sql Network)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_AUTOMOC ON) # Enables automatic moc generation
-
-find_package(Qt6 COMPONENTS Core Sql Network REQUIRED)
-
-set(SERVER_SOURCES
-    main.cpp
+set(SERVER_SRC
     Server.cpp
+    main.cpp
 )
 
-add_executable(server ${SERVER_SOURCES})
+set(SERVER_HEADERS
+    Server.h
+)
+
+add_executable(server ${SERVER_SRC} ${SERVER_HEADERS})
 
 target_include_directories(server PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(server
     Qt6::Core
     Qt6::Sql
     Qt6::Network
-    common
+#    common
 )
 
 # Copy config.json to output directory

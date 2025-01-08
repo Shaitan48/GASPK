@@ -1,10 +1,12 @@
-// main.cpp (Agent Entry Point)
+#include "Agent.h"
 #include <QCoreApplication>
-#include <QDebug>
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-    qDebug() << "Agent main is running.";
+
+    Agent agent;
+    agent.start();
+
     return app.exec();
 }

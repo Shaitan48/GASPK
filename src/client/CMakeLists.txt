@@ -1,26 +1,31 @@
-cmake_minimum_required(VERSION 3.16)
+# ============================================
+# Project: GASPK
+# File: CMakeLists.txt (client)
+# Description: CMake configuration for the client module.
+# Author: GASPK Team
+# Last Updated: 2025-01-08
+# ============================================
 
-project(client)
+# Find the Qt6 package
+find_package(Qt6 COMPONENTS Core Network Widgets REQUIRED)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_AUTOMOC ON) # Enables automatic moc generation
-
-find_package(Qt6 COMPONENTS Core Sql Network Widgets REQUIRED)
-
-set(CLIENT_SOURCES
-    main.cpp
+set(CLIENT_SRC
     Client.cpp
+    main.cpp
 )
 
-add_executable(client ${CLIENT_SOURCES})
+set(CLIENT_HEADERS
+    Client.h
+)
+
+add_executable(client ${CLIENT_SRC} ${CLIENT_HEADERS})
 
 target_include_directories(client PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(client
     Qt6::Core
-    Qt6::Sql
     Qt6::Network
     Qt6::Widgets
-    common
+#    common
 )
 
 # Copy config.json to output directory

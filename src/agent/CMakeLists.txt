@@ -1,25 +1,31 @@
-cmake_minimum_required(VERSION 3.16)
+# ============================================
+# Project: GASPK
+# File: CMakeLists.txt (agent)
+# Description: CMake configuration for the agent module.
+# Author: GASPK Team
+# Last Updated: 2025-01-08
+# ============================================
 
-project(agent)
+# Find the Qt6 package
+find_package(Qt6 REQUIRED COMPONENTS Core Sql Network)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_AUTOMOC ON) # Enables automatic moc generation
-
-find_package(Qt6 COMPONENTS Core Sql Network REQUIRED)
-
-set(AGENT_SOURCES
-    main.cpp
+set(AGENT_SRC
     Agent.cpp
+    main.cpp
 )
 
-add_executable(agent ${AGENT_SOURCES})
+set(AGENT_HEADERS
+    Agent.h
+)
+
+add_executable(agent ${AGENT_SRC} ${AGENT_HEADERS})
 
 target_include_directories(agent PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(agent
     Qt6::Core
     Qt6::Sql
     Qt6::Network
-    common
+#    common
 )
 
 # Copy config.json to output directory

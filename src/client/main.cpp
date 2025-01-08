@@ -1,10 +1,14 @@
-// main.cpp (Client Entry Point)
-#include <QCoreApplication>
-#include <QDebug>
+#include <QApplication>
+#include "Client.h"
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication app(argc, argv);
-    qDebug() << "Client main is running.";
+    QApplication app(argc, argv);
+
+    Client client;
+    client.setWindowTitle("Клиент GASPK");
+    client.resize(400, 300);
+    client.show();
+
     return app.exec();
 }

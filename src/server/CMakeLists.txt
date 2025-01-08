@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.16)
 
 project(server)
@@ -11,7 +10,6 @@ find_package(Qt6 COMPONENTS Core Sql Network REQUIRED)
 set(SERVER_SOURCES
     main.cpp
     Server.cpp
-    SqlDatabase.cpp
 )
 
 add_executable(server ${SERVER_SOURCES})
@@ -27,7 +25,7 @@ target_link_libraries(server
 # Copy config.json to output directory
 add_custom_command(TARGET server POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/config.json
+        ${CMAKE_SOURCE_DIR}/src/server/config.json
         ${CMAKE_BINARY_DIR}/config.json
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Copy config.json to server output directory"

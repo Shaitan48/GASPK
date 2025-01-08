@@ -1,95 +1,13 @@
 {
-  "server": {
-    "port": 1234
-  },
-  "allowedAgents": [
-    {
-      "username": "user",
-      "hostname": "host"
-    },
-    {
-      "username": "drkur",
-      "hostname": "My_Big_Comp"
-    },
-    {
-      "username": "mikhail",
-      "hostname": "DESKTOP-LS59B6I"
-    }
-  ],
   "database": {
-    "type": "mssql",
-    "server": "kurdiukov.com",
-    "database": "PU_GASPK",
-    "user": "sa",
-    "password": "Qwerty11"
+    "type": "QSQLITE",
+    "name": "example.db",
+    "host": "localhost",
+    "port": 3306,
+    "username": "user",
+    "password": "password"
   },
-  "tasks":[
-  {
-    "id": 1,
-    "enabled": true,
-    "ping": {
-      "target": "http://example.com",
-      "interval": 5000
-    },
-     "operations": [
-         {
-            "name": "message",
-            "parameters": {
-              "text": "Ping to example.com completed"
-            }
-        }
-     ]
-  },
-  {
-    "id": 2,
-    "enabled": true,
-    "diskSpace": {
-      "disks": ["C:", "D:"],
-      "threshold": 80,
-      "interval": 10000
-    },
-     "operations": [
-        {
-           "name": "message",
-            "parameters": {
-              "text": "Disk space is low"
-            }
-       }
-    ]
-  },
-  {
-    "id": 3,
-    "enabled": true,
-    "watchDog": {
-      "path": "/path/to/watch",
-      "mask": "*.log",
-      "interval": 1000
-    },
-      "operations": [
-          {
-            "name": "fileMove",
-            "parameters": {
-              "source": "/path/to/watch/file.log",
-               "destination": "/path/to/backup/file.log"
-            }
-          }
-      ]
-  },
-   {
-    "id": 4,
-    "enabled": true,
-    "ping": {
-       "target": "http://localhost",
-        "interval": 3000
-    },
-     "operations": [
-        {
-            "name": "request",
-            "parameters": {
-                "text": "Request from ping trigger"
-            }
-        }
-      ]
-    }
-  ]
+  "logging": {
+    "level": "INFO"
+  }
 }

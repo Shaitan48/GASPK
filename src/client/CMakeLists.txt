@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.16)
 
 project(client)
@@ -27,7 +26,7 @@ target_link_libraries(client
 # Copy config.json to output directory
 add_custom_command(TARGET client POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/config.json
+        ${CMAKE_SOURCE_DIR}/src/client/config.json
         ${CMAKE_BINARY_DIR}/config.json
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Copy config.json to client output directory"

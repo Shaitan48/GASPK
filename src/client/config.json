@@ -1,8 +1,9 @@
 {
-  "server": {
-    "host": "127.0.0.1",
-    "port": 1234
+  "logging": {
+    "level": "INFO"
   },
-  "logLevel": "debug",
-  "logLevelAvailable": "Возможные значения: debug, info, warning, error, none"
+  "client": {
+    "apiEndpoint": "http://localhost:8080/api",
+    "timeout": 5000
+  }
 }

@@ -1,18 +1,11 @@
+// server.h
 #ifndef SERVER_H
 #define SERVER_H
 
 #include <QObject>
-#include <QTcpServer>
-#include <QMap>
-#include <QList>
-#include "../common/Task.h"
-#include "SqlDatabase.h"
-
-class QTcpServer;
-class QTcpSocket;
-class QNetworkAccessManager;
-class QNetworkReply;
-class QJsonObject;
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QSqlDatabase>
 
 class Server : public QObject
 {
@@ -20,31 +13,19 @@ class Server : public QObject
 
 public:
     explicit Server(QObject *parent = nullptr);
-    ~Server() override;
+    ~Server();
 
-private slots:
-    void onNewConnection();
-    void onReadyRead();
-    void onDisconnected();
-    void onReply(QNetworkReply* reply);
-    void handleTaskStateChanged(const QJsonObject& taskStateChange, QTcpSocket* client);
-
+    bool startServer(quint16 port);
+    void stopServer();
 
 private:
-    void loadTasksFromFile();
-    void saveTasksToFile() const;
-    void sendTriggersToAgent(QTcpSocket* agent);
-    void sendOperationsToClient(QTcpSocket* client);
-    void sendAuthResult(QTcpSocket* client, bool authResult);
-    void sendSystemInfoToClient(QTcpSocket* client);
-    QTcpServer* tcpServer;
-    QNetworkAccessManager * manager;
-    QMap<QTcpSocket*, QString> clients;
-    QList<Task*> tasks;
-    QList<QJsonObject> allowedAgents;
-    bool isAgentAllowed(const QString& username, const QString& hostname) const;
-    SqlDatabase* db;
+    QSqlDatabase database;
+    QNetworkAccessManager *networkManager;
 
+    void sendRequest(const QString &url);
+
+private slots:
+    void onReplyFinished(QNetworkReply *reply);
 };
 
 #endif // SERVER_H

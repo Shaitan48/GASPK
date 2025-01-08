@@ -1,11 +1,10 @@
-#include <QApplication>
-#include "Client.h"
+// main.cpp (Client Entry Point)
+#include <QCoreApplication>
+#include <QDebug>
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
-
-    Client client;
-
+    QCoreApplication app(argc, argv);
+    qDebug() << "Client main is running.";
     return app.exec();
 }
